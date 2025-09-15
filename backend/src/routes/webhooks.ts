@@ -25,16 +25,38 @@ router.post("/orders/create", async (req, res) => {
     const tenant = await resolveTenant(req);
     const order = req.body;
 
+    // 🔑 Ensure customer exists first
+    let customerId: string | null = null;
+    if (order.customer?.id) {
+      const dbCustomer = await prisma.customer.upsert({
+        where: { shopifyId: String(order.customer.id) },
+        update: {
+          name: `${order.customer.first_name || ""} ${order.customer.last_name || ""}`.trim() || "Anonymous",
+          email: order.customer.email,
+        },
+        create: {
+          shopifyId: String(order.customer.id),
+          name: `${order.customer.first_name || ""} ${order.customer.last_name || ""}`.trim() || "Anonymous",
+          email: order.customer.email,
+          tenantId: tenant.id,
+          totalSpent: 0,
+        },
+      });
+      customerId = dbCustomer.id;
+    }
+
     await prisma.order.upsert({
       where: { shopifyId: String(order.id) },
       update: {
         total: parseFloat(order.total_price || "0"),
         tenantId: tenant.id,
+        customerId,
       },
       create: {
         shopifyId: String(order.id),
         total: parseFloat(order.total_price || "0"),
         tenantId: tenant.id,
+        customerId,
       },
     });
 
@@ -43,7 +65,7 @@ router.post("/orders/create", async (req, res) => {
         tenantId: tenant.id,
         type: "order_created",
         payload: order,
-        customerId: order.customer?.id ? String(order.customer.id) : null,
+        customerId,
       },
     });
 
@@ -63,13 +85,12 @@ router.post("/customers/create", async (req, res) => {
     const tenant = await resolveTenant(req);
     const customer = req.body;
 
-    await prisma.customer.upsert({
+    const dbCustomer = await prisma.customer.upsert({
       where: { shopifyId: String(customer.id) },
       update: {
         name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
         email: customer.email,
         totalSpent: parseFloat(customer.total_spent || "0"),
-        tenantId: tenant.id,
       },
       create: {
         shopifyId: String(customer.id),
@@ -85,7 +106,7 @@ router.post("/customers/create", async (req, res) => {
         tenantId: tenant.id,
         type: "customer_created",
         payload: customer,
-        customerId: String(customer.id),
+        customerId: dbCustomer.id,
       },
     });
 
@@ -102,11 +123,18 @@ router.post("/customers/update", async (req, res) => {
     const tenant = await resolveTenant(req);
     const customer = req.body;
 
-    await prisma.customer.update({
+    const dbCustomer = await prisma.customer.upsert({
       where: { shopifyId: String(customer.id) },
-      data: {
+      update: {
         name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
         email: customer.email,
+        totalSpent: parseFloat(customer.total_spent || "0"),
+      },
+      create: {
+        shopifyId: String(customer.id),
+        name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+        email: customer.email,
+        tenantId: tenant.id,
         totalSpent: parseFloat(customer.total_spent || "0"),
       },
     });
@@ -116,7 +144,7 @@ router.post("/customers/update", async (req, res) => {
         tenantId: tenant.id,
         type: "customer_updated",
         payload: customer,
-        customerId: String(customer.id),
+        customerId: dbCustomer.id,
       },
     });
 
@@ -141,7 +169,6 @@ router.post("/products/create", async (req, res) => {
       update: {
         title: product.title,
         price: parseFloat(product.variants?.[0]?.price || "0"),
-        tenantId: tenant.id,
       },
       create: {
         shopifyId: String(product.id),
@@ -172,11 +199,17 @@ router.post("/products/update", async (req, res) => {
     const tenant = await resolveTenant(req);
     const product = req.body;
 
-    await prisma.product.update({
+    await prisma.product.upsert({
       where: { shopifyId: String(product.id) },
-      data: {
+      update: {
         title: product.title,
         price: parseFloat(product.variants?.[0]?.price || "0"),
+      },
+      create: {
+        shopifyId: String(product.id),
+        title: product.title,
+        price: parseFloat(product.variants?.[0]?.price || "0"),
+        tenantId: tenant.id,
       },
     });
 
@@ -229,16 +262,31 @@ router.post("/checkouts/update", async (req, res) => {
     const tenant = await resolveTenant(req);
     const checkout = req.body;
 
+    let customerId: string | null = null;
+    if (checkout.customer?.id) {
+      const dbCustomer = await prisma.customer.upsert({
+        where: { shopifyId: String(checkout.customer.id) },
+        update: {
+          name: `${checkout.customer.first_name || ""} ${checkout.customer.last_name || ""}`.trim() || "Anonymous",
+          email: checkout.customer.email,
+        },
+        create: {
+          shopifyId: String(checkout.customer.id),
+          name: `${checkout.customer.first_name || ""} ${checkout.customer.last_name || ""}`.trim() || "Anonymous",
+          email: checkout.customer.email,
+          tenantId: tenant.id,
+          totalSpent: 0,
+        },
+      });
+      customerId = dbCustomer.id;
+    }
+
     await prisma.event.create({
       data: {
         tenantId: tenant.id,
-        type: checkout.abandoned_checkout_url
-          ? "cart_abandoned"
-          : "checkout_started",
+        type: checkout.abandoned_checkout_url ? "cart_abandoned" : "checkout_started",
         payload: checkout,
-        customerId: checkout.customer?.id
-          ? String(checkout.customer.id)
-          : null,
+        customerId,
       },
     });
 

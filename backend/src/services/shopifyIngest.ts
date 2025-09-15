@@ -67,13 +67,14 @@ export async function ingestShopifyData(
       where: { shopifyId: String(fullOrder.id) },
       update: {
         total: parseFloat(fullOrder.total_price || "0"),
-        customerId: customerRecord?.id || null,
+        tenantId,
+        customerId: customerRecord?.id || null, // ✅ ensure linked
       },
       create: {
         shopifyId: String(fullOrder.id),
         total: parseFloat(fullOrder.total_price || "0"),
         tenantId,
-        customerId: customerRecord?.id || null,
+        customerId: customerRecord?.id || null, // ✅ ensure linked
       },
     });
 
@@ -157,51 +158,47 @@ export async function ingestShopifyData(
   productCount = products.length;
 
   // ---------------- Draft Orders ----------------
-const drafts = await shopify.draftOrder.list();
+  const drafts = await shopify.draftOrder.list();
+  for (const d of drafts) {
+    let customerId: string | null = null;
 
-for (const d of drafts) {
-  let customerId: string | null = null;
-
-  if (d.customer?.id) {
-    // Try to resolve the customer in our DB
-    const dbCustomer = await prisma.customer.findUnique({
-      where: { shopifyId: String(d.customer.id) },
-    });
-
-    if (dbCustomer) {
-      customerId = dbCustomer.id;
-    } else {
-      // 👇 Optional: create stub customer if not already ingested
-      const newCustomer = await prisma.customer.create({
-        data: {
-          shopifyId: String(d.customer.id),
-          name:
-            `${d.customer.first_name || ""} ${
-              d.customer.last_name || ""
-            }`.trim() || "Anonymous",
-          email: d.customer.email,
-          tenantId,
-          totalSpent: 0,
-        },
+    if (d.customer?.id) {
+      const dbCustomer = await prisma.customer.findUnique({
+        where: { shopifyId: String(d.customer.id) },
       });
-      customerId = newCustomer.id;
+
+      if (dbCustomer) {
+        customerId = dbCustomer.id;
+      } else {
+        const newCustomer = await prisma.customer.create({
+          data: {
+            shopifyId: String(d.customer.id),
+            name:
+              `${d.customer.first_name || ""} ${
+                d.customer.last_name || ""
+              }`.trim() || "Anonymous",
+            email: d.customer.email,
+            tenantId,
+            totalSpent: 0,
+          },
+        });
+        customerId = newCustomer.id;
+      }
     }
-  }
 
-  await prisma.event.create({
-    data: {
-      tenantId,
-      type: "DRAFT_ORDER",
-      payload: {
-        draftId: String(d.id),
-        total: d.total_price,
-        status: d.status,
+    await prisma.event.create({
+      data: {
+        tenantId,
+        type: "DRAFT_ORDER",
+        payload: {
+          draftId: String(d.id),
+          total: d.total_price,
+          status: d.status,
+        },
+        customerId, // ✅ safe link or null
       },
-      customerId, // ✅ now points to valid DB customer or null
-    },
-  });
-}
-
+    });
+  }
 
   return {
     success: true,
