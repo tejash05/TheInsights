@@ -7,6 +7,7 @@ import webhookRoutes from "./routes/webhooks";
 import eventRoutes from "./routes/events";
 import { registerWebhooks } from "./services/registerWebhooks";
 import resyncRoutes from "./routes/resync";
+import "./scheduler"; 
 
 const prisma = new PrismaClient();
 const app = express();
