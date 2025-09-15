@@ -3,10 +3,10 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
-
-import { getShopifyClient } from "./config/shopify";
 import webhookRoutes from "./routes/webhooks";
 import eventRoutes from "./routes/events";
+import { registerWebhooks } from "./services/registerWebhooks";
+import resyncRoutes from "./routes/resync";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -25,7 +25,7 @@ app.use(
 app.use(express.json());
 app.use("/webhooks", webhookRoutes);
 app.use("/events", eventRoutes);
-
+app.use("/resync", resyncRoutes);
 // ---------------- Debug ----------------
 app.get("/ping", (_req: Request, res: Response) => {
   res.send("✅ Express + Prisma is working");
@@ -74,6 +74,9 @@ app.post("/register", async (req: Request, res: Response) => {
       data: { email, password: hashedPassword, tenantId: tenant.id },
     });
 
+    // 🔹 Register Shopify webhooks for this tenant
+    await registerWebhooks(tenant.id, shopifyShop, accessToken);
+
     res.json({
       message: "Tenant + User registered successfully",
       tenantId: tenant.id,
@@ -81,9 +84,7 @@ app.post("/register", async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("❌ Registration error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to register tenant" });
+    res.status(500).json({ error: err.message || "Failed to register tenant" });
   }
 });
 
@@ -98,6 +99,10 @@ app.post("/tenants", async (req: Request, res: Response) => {
     const tenant = await prisma.tenant.create({
       data: { name, shopifyShop, accessToken, domain: domain || null },
     });
+
+    // 🔹 Auto-register webhooks when tenant is created manually
+    await registerWebhooks(tenant.id, shopifyShop, accessToken);
+
     res.json(tenant);
   } catch (err: any) {
     console.error("❌ Tenant creation error:", err);
@@ -113,9 +118,7 @@ app.get("/tenants", async (_req: Request, res: Response) => {
     res.json(tenants);
   } catch (err: any) {
     console.error("❌ Fetch tenants error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch tenants" });
+    res.status(500).json({ error: err.message || "Failed to fetch tenants" });
   }
 });
 
@@ -143,9 +146,7 @@ app.get("/customers", async (req: Request, res: Response) => {
     res.json(formatted);
   } catch (err: any) {
     console.error("❌ Fetch customers error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch customers" });
+    res.status(500).json({ error: err.message || "Failed to fetch customers" });
   }
 });
 
@@ -178,9 +179,7 @@ app.get("/customers/stats", async (req: Request, res: Response) => {
     res.json(sorted);
   } catch (err: any) {
     console.error("❌ Customer stats error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch stats" });
+    res.status(500).json({ error: err.message || "Failed to fetch stats" });
   }
 });
 
@@ -198,9 +197,7 @@ app.get("/orders", async (req: Request, res: Response) => {
     res.json(orders);
   } catch (err: any) {
     console.error("❌ Fetch orders error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch orders" });
+    res.status(500).json({ error: err.message || "Failed to fetch orders" });
   }
 });
 
@@ -227,9 +224,7 @@ app.get("/orders/stats", async (req: Request, res: Response) => {
     res.json(stats);
   } catch (err: any) {
     console.error("❌ Orders stats error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch stats" });
+    res.status(500).json({ error: err.message || "Failed to fetch stats" });
   }
 });
 
@@ -246,9 +241,7 @@ app.get("/products", async (req: Request, res: Response) => {
     res.json(products);
   } catch (err: any) {
     console.error("❌ Fetch products error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch products" });
+    res.status(500).json({ error: err.message || "Failed to fetch products" });
   }
 });
 

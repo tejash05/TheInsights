@@ -3,7 +3,7 @@ import prisma from "../config/db";
 
 const router = Router();
 
-// ✅ Get all customers for a tenant (with order count)
+// ✅Get all customers for a tenant (with order count)
 router.get("/", async (req, res) => {
   const { tenantId } = req.query;
   if (!tenantId) return res.status(400).json({ error: "Missing tenantId" });
@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
     const customers = await prisma.customer.findMany({
       where: { tenantId: String(tenantId) },
       include: {
-        orders: { select: { id: true } }, // 👈 include orders to count
+        orders: { select: { id: true } }, // include orders to count
       },
     });
 

@@ -21,7 +21,7 @@ export default function RegisterPage() {
     const accessToken = (form.elements.namedItem("accessToken") as HTMLInputElement).value;
 
     try {
-      const res = await fetch("https://theinsights-e7a0.onrender.com/register", {
+      const res = await fetch("http://localhost:4000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, shopifyShop, accessToken }),

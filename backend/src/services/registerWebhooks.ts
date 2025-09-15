@@ -1,38 +1,44 @@
-import { getShopifyClient } from "../config/shopify";
-import { WebhookTopic } from "shopify-api-node";
+import Shopify, { WebhookTopic } from "shopify-api-node";
 
 /**
- * Registers Shopify webhooks for a given tenant.
- * Each webhook includes tenantId in query so we can map incoming events.
+ * Register Shopify webhooks for a given tenant
  */
 export async function registerWebhooks(
-  shopifyShop: string,
-  accessToken: string,
-  tenantId: string
+  tenantId: string,
+  shop: string,
+  accessToken: string
 ) {
-  const shopify = getShopifyClient(shopifyShop, accessToken);
+  // shopify-api-node expects shopName WITHOUT ".myshopify.com"
+  const shopify = new Shopify({
+    shopName: shop.replace(".myshopify.com", ""),
+    accessToken,
+  });
 
-  const topics: { topic: WebhookTopic; endpoint: string }[] = [
-    { topic: "orders/create", endpoint: `/webhooks/orders/create?tenantId=${tenantId}` },
-    { topic: "customers/create", endpoint: `/webhooks/customers/create?tenantId=${tenantId}` },
-    { topic: "products/update", endpoint: `/webhooks/products/update?tenantId=${tenantId}` },
-    { topic: "checkouts/update", endpoint: `/webhooks/checkouts/update?tenantId=${tenantId}` },
+  const baseUrl = process.env.BACKEND_URL;
+  if (!baseUrl) {
+    throw new Error("❌ Missing BACKEND_URL in environment variables");
+  }
+
+  const webhooks: { topic: WebhookTopic; path: string }[] = [
+    { topic: "orders/create" as WebhookTopic, path: `/webhooks/orders/create?tenantId=${tenantId}` },
+    { topic: "customers/create" as WebhookTopic, path: `/webhooks/customers/create?tenantId=${tenantId}` },
+    { topic: "customers/update" as WebhookTopic, path: `/webhooks/customers/update?tenantId=${tenantId}` },
+    { topic: "products/create" as WebhookTopic, path: `/webhooks/products/create?tenantId=${tenantId}` },
+    { topic: "products/update" as WebhookTopic, path: `/webhooks/products/update?tenantId=${tenantId}` },
+    { topic: "products/delete" as WebhookTopic, path: `/webhooks/products/delete?tenantId=${tenantId}` },
+    { topic: "checkouts/update" as WebhookTopic, path: `/webhooks/checkouts/update?tenantId=${tenantId}` },
   ];
 
-  for (const { topic, endpoint } of topics) {
+  for (const w of webhooks) {
     try {
       await shopify.webhook.create({
-        topic,
-        address: `${process.env.BASE_URL}${endpoint}`, // 👈 BASE_URL = your public backend URL
+        topic: w.topic,
+        address: `${baseUrl}${w.path}`,
         format: "json",
       });
-      console.log(`✅ Webhook ${topic} registered for tenant ${tenantId}`);
+      console.log(`✅ Registered webhook ${w.topic} for tenant ${tenantId}`);
     } catch (err: any) {
-      if (err.message?.includes("already exists")) {
-        console.log(`ℹ️ Webhook ${topic} already exists for tenant ${tenantId}`);
-      } else {
-        console.error(`❌ Failed to register webhook ${topic}:`, err.message);
-      }
+      console.error(`❌ Failed to register webhook ${w.topic}:`, err.message);
     }
   }
 }

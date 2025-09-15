@@ -8,6 +8,10 @@ export async function ingestShopifyData(
 ) {
   const shopify = getShopifyClient(shop, accessToken);
 
+  let customerCount = 0;
+  let orderCount = 0;
+  let productCount = 0;
+
   // ---------------- Customers ----------------
   const customers = await shopify.customer.list();
   for (const c of customers) {
@@ -27,10 +31,10 @@ export async function ingestShopifyData(
       },
     });
   }
+  customerCount = customers.length;
 
   // ---------------- Orders + OrderItems ----------------
   const orders = await shopify.order.list();
-
   for (const o of orders) {
     // 🔑 Fetch full order details (ensures line_items are included)
     const fullOrder = await shopify.order.get(o.id);
@@ -41,15 +45,17 @@ export async function ingestShopifyData(
         where: { shopifyId: String(fullOrder.customer.id) },
         update: {
           name:
-            `${fullOrder.customer.first_name || ""} ${fullOrder.customer.last_name || ""}`.trim() ||
-            "Anonymous",
+            `${fullOrder.customer.first_name || ""} ${
+              fullOrder.customer.last_name || ""
+            }`.trim() || "Anonymous",
           email: fullOrder.customer.email,
         },
         create: {
           shopifyId: String(fullOrder.customer.id),
           name:
-            `${fullOrder.customer.first_name || ""} ${fullOrder.customer.last_name || ""}`.trim() ||
-            "Anonymous",
+            `${fullOrder.customer.first_name || ""} ${
+              fullOrder.customer.last_name || ""
+            }`.trim() || "Anonymous",
           email: fullOrder.customer.email,
           tenantId,
           totalSpent: 0,
@@ -74,7 +80,6 @@ export async function ingestShopifyData(
     // Save line items
     if (fullOrder.line_items && fullOrder.line_items.length > 0) {
       for (const li of fullOrder.line_items) {
-        // Handle missing product_id
         const productShopifyId = li.product_id
           ? String(li.product_id)
           : `line-${li.id}`;
@@ -86,15 +91,14 @@ export async function ingestShopifyData(
           create: {
             shopifyId: productShopifyId,
             title: li.name,
-            price: parseFloat(li.price || "0"), // store unit price
+            price: parseFloat(li.price || "0"), // unit price
             tenantId,
           },
         });
 
-        // Calculate line total
-        const lineTotal = parseFloat(li.price || "0") * (li.quantity || 1);
+        const lineTotal =
+          parseFloat(li.price || "0") * (li.quantity || 1);
 
-        // Save line item
         await prisma.orderItem.upsert({
           where: { shopifyLineId: String(li.id) },
           update: {
@@ -118,6 +122,7 @@ export async function ingestShopifyData(
       console.log(`⚠️ Order ${fullOrder.id} has no line_items`);
     }
   }
+  orderCount = orders.length;
 
   // ---------------- Recalculate customer totals ----------------
   const allCustomers = await prisma.customer.findMany({ where: { tenantId } });
@@ -139,33 +144,69 @@ export async function ingestShopifyData(
       where: { shopifyId: String(p.id) },
       update: {
         title: p.title,
-        price: parseFloat(p.variants[0]?.price || "0"),
+        price: parseFloat(p.variants?.[0]?.price || "0"),
       },
       create: {
         shopifyId: String(p.id),
         title: p.title,
-        price: parseFloat(p.variants[0]?.price || "0"),
+        price: parseFloat(p.variants?.[0]?.price || "0"),
         tenantId,
       },
     });
   }
+  productCount = products.length;
 
   // ---------------- Draft Orders ----------------
-  const drafts = await shopify.draftOrder.list();
-  for (const d of drafts) {
-    await prisma.event.create({
-      data: {
-        tenantId,
-        type: "DRAFT_ORDER",
-        payload: {
-          draftId: String(d.id),
-          total: d.total_price,
-          status: d.status,
-        },
-        customerId: d.customer?.id ? String(d.customer.id) : null,
-      },
+const drafts = await shopify.draftOrder.list();
+
+for (const d of drafts) {
+  let customerId: string | null = null;
+
+  if (d.customer?.id) {
+    // Try to resolve the customer in our DB
+    const dbCustomer = await prisma.customer.findUnique({
+      where: { shopifyId: String(d.customer.id) },
     });
+
+    if (dbCustomer) {
+      customerId = dbCustomer.id;
+    } else {
+      // 👇 Optional: create stub customer if not already ingested
+      const newCustomer = await prisma.customer.create({
+        data: {
+          shopifyId: String(d.customer.id),
+          name:
+            `${d.customer.first_name || ""} ${
+              d.customer.last_name || ""
+            }`.trim() || "Anonymous",
+          email: d.customer.email,
+          tenantId,
+          totalSpent: 0,
+        },
+      });
+      customerId = newCustomer.id;
+    }
   }
 
-  return { success: true };
+  await prisma.event.create({
+    data: {
+      tenantId,
+      type: "DRAFT_ORDER",
+      payload: {
+        draftId: String(d.id),
+        total: d.total_price,
+        status: d.status,
+      },
+      customerId, // ✅ now points to valid DB customer or null
+    },
+  });
+}
+
+
+  return {
+    success: true,
+    customers: customerCount,
+    orders: orderCount,
+    products: productCount,
+  };
 }
