@@ -93,13 +93,15 @@ flowchart LR
   Backend --> Frontend[Next.js Dashboard]
   User[Authenticated User] --> Frontend
 ```
-🌐 Deployment Info
-Service	Link
-🖥️ Frontend	https://theinsights.onrender.com
-⚙️ Backend	https://theinsights-e7a0.onrender.com
-📊 Demo Video	Google Drive Link
-📦 Setup Instructions
-1. Clone repo
+## 🌐 Deployment Info
+
+| Service   | Link |
+|-----------|------|
+| 🖥️ Frontend | [https://theinsights.onrender.com](https://theinsights.onrender.com) |
+| ⚙️ Backend  | [https://theinsights-e7a0.onrender.com](https://theinsights-e7a0.onrender.com) |
+| 📊 Demo Video | [https://drive.google.com/file/d/1I39u6he7bsTMIny2lvpedaDw56Y_R8HS/view](https://drive.google.com/file/d/1I39u6he7bsTMIny2lvpedaDw56Y_R8HS/view) |
+
+---
 ```
 git clone https://github.com/tejash05/Xeno-FDE.git
 cd Xeno-FDE
