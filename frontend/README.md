@@ -10,11 +10,11 @@ It provides tenants with **authentication, data insights, and visualizations** f
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["TheInsights Frontend (Next.js + React)"]
-        UI[Pages & Components] --> Router[Next.js Router]
-        Router --> State[State Management / React Hooks]
+    subgraph Frontend["TheInsights Frontend - Next.js + React"]
+        UI[Pages and Components] --> Router[Next.js Router]
+        Router --> State[React State Management]
         State --> APIClient[API Client]
-        APIClient --> Env[Environment Config (.env.local)]
+        APIClient --> Env[Environment Config]
     end
 
     subgraph Backend["Backend APIs"]
@@ -27,7 +27,7 @@ flowchart TD
     APIClient --> Insights
     APIClient --> Shopify
 
-    User[👤 Tenant User] --> UI
+    User[Tenant User] --> UI
 ```
 ## 🌐 Frontend Deployment Info
 
