@@ -1,4 +1,4 @@
-# 🚀 Xeno – Multi-Tenant Shopify Data Ingestion & Insights Service
+# TheInsights – Multi-Tenant Shopify Data Ingestion & Insights Service
 **Xeno FDE Internship Assignment – 2025** is a simulated enterprise-grade Shopify integration platform.  
 It ingests multi-tenant Shopify store data (customers, orders, products, and events), stores it in a relational database, and provides an insights dashboard for business metrics — all with clean architecture, extensibility, and deployment readiness.
 
