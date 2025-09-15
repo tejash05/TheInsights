@@ -17,33 +17,18 @@ export default function EventsPage() {
       if (!session?.user?.tenantId) return;
       try {
         setLoading(true);
-
         const data = await apiFetch(`/events?tenantId=${session.user.tenantId}`);
 
-        // ✅ Format events for table
+        // ✅ Cleanly format for the table
         const formatted = data.map((e: any) => {
-          if (e.type === "DRAFT_ORDER") {
-            return {
-              type: "Draft Order",
-              createdAt: new Date(e.createdAt).toLocaleString(),
-              customer: e.customerId || "Unknown",
-              draftId: e.payload?.draftId || "-",
-              total: `₹${parseFloat(e.payload?.total || 0).toFixed(2)}`,
-              status: e.payload?.status || "-",
-            };
-          } else {
-            // Fallback for other event types
-            return {
-              type: e.type,
-              createdAt: new Date(e.createdAt).toLocaleString(),
-              customer: "-",
-              draftId: "-",
-              total: "-",
-              status: Object.entries(e.payload || {})
-                .map(([k, v]) => `${k}: ${v}`)
-                .join(", ") || "-",
-            };
-          }
+          return {
+            type: e.type.replace(/_/g, " "), // prettier labels
+            createdAt: new Date(e.createdAt).toLocaleString(),
+            customer: e.customerId ? `•••${String(e.customerId).slice(-4)}` : "-",
+            draftId: e.payload?.draftId || "-",
+            total: e.payload?.total ? `₹${parseFloat(e.payload.total).toFixed(2)}` : "-",
+            status: e.payload?.status || "-",
+          };
         });
 
         setEvents(formatted);
