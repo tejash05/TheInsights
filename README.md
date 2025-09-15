@@ -64,22 +64,6 @@ It ingests multi-tenant Shopify store data (customers, orders, products, and eve
 - Scheduler for periodic sync  
 - Draft ingestion pipeline (for resiliency & retry mechanism)
 
----
-
-## 📸 Screenshots
-| Login | Dashboard | Orders |
-|-------|-----------|--------|
-| ![](assets/login.png) | ![](assets/dashboard.png) | ![](assets/orders.png) |
-
-| Customers | Products | Events |
-|-----------|----------|--------|
-| ![](assets/customers.png) | ![](assets/products.png) | ![](assets/events.png) |
-
-| Settings | Profile | Tenant |
-|----------|---------|--------|
-| ![](assets/settings.png) | ![](assets/profile.png) | ![](assets/tenant.png) |
-
----
 
 ## 🧩 Folder Structure
 ```bash
