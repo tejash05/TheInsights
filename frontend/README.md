@@ -1,10 +1,66 @@
-# 🖥️ Xeno Frontend
+# 🖥️ TheIns Frontend
 
 The **Xeno Frontend** is a modern dashboard built using **Next.js + React**.  
 It provides tenants with **authentication, data insights, and visualizations** for their Shopify store customers, orders, products, and events.
 
+
+
+## 🏗️ Project Architecture
+
+The Xeno platform follows a **modular architecture** with clear separation of concerns:
+
+1. **Frontend (Next.js + React + Tailwind)**  
+   - Handles **authentication (JWT)** and tenant login.  
+   - Provides a **dashboard UI** to visualize customers, orders, products, and events.  
+   - Fetches data securely from backend APIs.  
+
+2. **Backend (Node.js + Express + Prisma + PostgreSQL)**  
+   - Manages **multi-tenant data ingestion** with Prisma ORM.  
+   - Provides REST APIs for tenants: `/auth`, `/insights`, `/shopify`.  
+   - Stores data in a **tenant-isolated relational database**.  
+   - Handles **webhook events** from Shopify.  
+
+3. **Shopify Integration**  
+   - **APIs** used to fetch Customers, Orders, Products.  
+   - **Webhooks** to sync data in real-time (e.g., order created).  
+   - **Scheduler (Cron Jobs)** ensures periodic re-sync for reliability.  
+   - Supports **Draft Orders & Events** to track cart abandonment, checkout started.  
+
+4. **Optional Tools**  
+   - **Redis** for caching hot queries.  
+   - **RabbitMQ** for async job queueing (future scalability).  
+   - **Docker** for containerized deployment.  
+
 ---
 
+### 📐 Architecture Diagram
+
+```mermaid
+flowchart TD
+  subgraph Shopify
+    API[Shopify REST API] --> Webhooks[Shopify Webhooks]
+  end
+
+  subgraph Backend["Backend (Node.js + Express)"]
+    Routes[/API Routes/]
+    Prisma[Prisma ORM]
+    DB[(PostgreSQL)]
+    Scheduler[Scheduler / Cron Jobs]
+    Routes --> Prisma --> DB
+    Webhooks --> Routes
+    Scheduler --> Routes
+  end
+
+  subgraph Frontend["Frontend (Next.js + React)"]
+    UI[Dashboard UI]
+  end
+
+  Shopify --> Backend
+  Backend --> Frontend
+  User[Authenticated User] --> UI
+
+---
+```
 ## 🌐 Frontend Deployment Info
 
 | Service   | Link |
@@ -75,10 +131,12 @@ npm run dev
 4. Configure environment variables
 
 Create a .env.local file inside the frontend directory:
+
+```
 ```
 NEXT_PUBLIC_API_URL=https://theinsights-e7a0.onrender.com
-```
 
+```
 This ensures the frontend communicates with the backend service.
 📸 Frontend Screenshots
 🔐 Authentication
