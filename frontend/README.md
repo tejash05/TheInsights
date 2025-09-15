@@ -7,13 +7,14 @@ It provides tenants with **authentication, data insights, and visualizations** f
 
 
 ## 🖥️ TheInsights – Frontend Architecture
+
 ```mermaid
 flowchart TD
     subgraph Frontend["TheInsights Frontend (Next.js + React)"]
         UI[Pages & Components] --> Router[Next.js Router]
-        Router --> State[State Management / Hooks]
-        State --> APIClient[API Client (fetch / axios)]
-        APIClient --> Env[Env Config (.env.local)]
+        Router --> State[State Management / React Hooks]
+        State --> APIClient[API Client]
+        APIClient --> Env[Environment Config (.env.local)]
     end
 
     subgraph Backend["Backend APIs"]
@@ -27,18 +28,7 @@ flowchart TD
     APIClient --> Shopify
 
     User[👤 Tenant User] --> UI
-
 ```
----
-
-### 🔑 How it works
-- **User (Tenant)** interacts with the **UI (Next.js pages, React components)**.  
-- **Next.js Router** handles navigation (`/login`, `/dashboard`, `/orders`, `/customers`, etc.).  
-- **State management (React hooks / context)** stores session data.  
-- **API Client** connects frontend → backend using `NEXT_PUBLIC_API_URL`.  
-- **Backend APIs** (Auth, Insights, Shopify) provide all the data.  
-
----
 ## 🌐 Frontend Deployment Info
 
 | Service   | Link |
