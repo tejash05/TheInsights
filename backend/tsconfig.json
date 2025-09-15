@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "outDir": "dist",
-    "rootDir": "src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "target": "ES2020",          // Modern JS features compiled down to ES2020
+    "module": "CommonJS",        // Required for Node.js (so you can use require/import properly)
+    "outDir": "dist",            // Compiled .js files will go to dist/
+    "rootDir": "src",            // Source .ts files are inside src/
+    "strict": true,              // Enables strict type-checking (good for safety)
+    "esModuleInterop": true,     // Allows default imports from CommonJS modules
+    "skipLibCheck": true         // Speeds up compilation by skipping type checks on node_modules
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"],            // Only compile files in src/
+  "exclude": ["node_modules", "dist"] // Ignore node_modules and dist output
 }
