@@ -1,3 +1,4 @@
+import "dotenv/config"; // 👈 load .env first
 import express, { Request, Response } from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
@@ -11,10 +12,10 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ Allow frontend requests
+// ✅ Allow frontend requests (from .env FRONTEND_URL)
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -80,7 +81,9 @@ app.post("/register", async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("❌ Registration error:", err);
-    res.status(500).json({ error: err.message || "Failed to register tenant" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to register tenant" });
   }
 });
 
@@ -98,7 +101,9 @@ app.post("/tenants", async (req: Request, res: Response) => {
     res.json(tenant);
   } catch (err: any) {
     console.error("❌ Tenant creation error:", err);
-    res.status(500).json({ error: err.message || "Failed to create tenant" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to create tenant" });
   }
 });
 
@@ -108,7 +113,9 @@ app.get("/tenants", async (_req: Request, res: Response) => {
     res.json(tenants);
   } catch (err: any) {
     console.error("❌ Fetch tenants error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch tenants" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch tenants" });
   }
 });
 
@@ -136,7 +143,9 @@ app.get("/customers", async (req: Request, res: Response) => {
     res.json(formatted);
   } catch (err: any) {
     console.error("❌ Fetch customers error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch customers" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customers" });
   }
 });
 
@@ -151,7 +160,8 @@ app.get("/customers/stats", async (req: Request, res: Response) => {
     });
 
     const enriched = topCustomers.map((c) => {
-      const total = c.totalSpent || c.orders.reduce((sum, o) => sum + o.total, 0);
+      const total =
+        c.totalSpent || c.orders.reduce((sum, o) => sum + o.total, 0);
       return {
         customerId: c.shopifyId,
         last4Id: `•••${c.shopifyId.slice(-4)}`,
@@ -162,11 +172,15 @@ app.get("/customers/stats", async (req: Request, res: Response) => {
       };
     });
 
-    const sorted = enriched.sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
+    const sorted = enriched
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 5);
     res.json(sorted);
   } catch (err: any) {
     console.error("❌ Customer stats error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch stats" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch stats" });
   }
 });
 
@@ -184,7 +198,9 @@ app.get("/orders", async (req: Request, res: Response) => {
     res.json(orders);
   } catch (err: any) {
     console.error("❌ Fetch orders error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch orders" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch orders" });
   }
 });
 
@@ -204,11 +220,16 @@ app.get("/orders/stats", async (req: Request, res: Response) => {
       return acc;
     }, {});
 
-    const stats = Object.entries(grouped).map(([date, orders]) => ({ date, orders }));
+    const stats = Object.entries(grouped).map(([date, orders]) => ({
+      date,
+      orders,
+    }));
     res.json(stats);
   } catch (err: any) {
     console.error("❌ Orders stats error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch stats" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch stats" });
   }
 });
 
@@ -225,7 +246,9 @@ app.get("/products", async (req: Request, res: Response) => {
     res.json(products);
   } catch (err: any) {
     console.error("❌ Fetch products error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch products" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch products" });
   }
 });
 
@@ -268,7 +291,9 @@ app.get("/products/stats", async (req: Request, res: Response) => {
 
     const results = await Promise.all(
       grouped.map(async (g) => {
-        const product = await prisma.product.findUnique({ where: { id: g.productId } });
+        const product = await prisma.product.findUnique({
+          where: { id: g.productId },
+        });
         return {
           productId: g.productId,
           name: product?.title || "Unknown",
@@ -278,11 +303,15 @@ app.get("/products/stats", async (req: Request, res: Response) => {
       })
     );
 
-    const topProducts = results.sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+    const topProducts = results
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
     res.json(topProducts);
   } catch (err: any) {
     console.error("❌ Products stats error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch product stats" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch product stats" });
   }
 });
 
@@ -312,7 +341,9 @@ app.get("/overview", async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("❌ Overview fetch error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch overview" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch overview" });
   }
 });
 

@@ -1,6 +1,6 @@
 // lib/apiClient.ts
 export async function apiFetch(path: string, options: RequestInit = {}, tenantId?: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://theinsights-e7a0.onrender.com";
 
   // Append tenantId automatically if provided
   let url = `${baseUrl}${path}`;
