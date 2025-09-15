@@ -12,12 +12,21 @@ router.post("/", async (req, res) => {
   }
 
   try {
+    // Pick only key fields from payload
+    const slimPayload = {
+      id: payload?.id,
+      title: payload?.title || payload?.name,
+      email: payload?.email || payload?.contact_email,
+      total: payload?.total_price || payload?.total,
+      status: payload?.status || payload?.financial_status,
+    };
+
     const event = await prisma.event.create({
       data: {
         tenantId,
         type,
-        payload: payload || {},
-        customerId: customerId || null, // optional link to customer
+        payload: slimPayload, // ✅ cleaner payload
+        customerId: customerId || null,
       },
     });
 
@@ -25,16 +34,12 @@ router.post("/", async (req, res) => {
       id: event.id,
       type: event.type,
       createdAt: event.createdAt,
-      customerId: customerId
-        ? `•••${String(customerId).slice(-4)}`
-        : "Unknown",
+      customerId: customerId ? `•••${String(customerId).slice(-4)}` : "Unknown",
       payload: event.payload,
     });
   } catch (err: any) {
     console.error("❌ Event creation error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to create event" });
+    res.status(500).json({ error: err.message || "Failed to create event" });
   }
 });
 
@@ -48,7 +53,7 @@ router.get("/", async (req, res) => {
   try {
     const events = await prisma.event.findMany({
       where: { tenantId: String(tenantId) },
-      include: { customer: true }, // 👈 get customer info if linked
+      include: { customer: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -59,15 +64,13 @@ router.get("/", async (req, res) => {
       customerId: e.customer?.shopifyId
         ? `•••${e.customer.shopifyId.slice(-4)}`
         : "Unknown",
-      payload: e.payload,
+      payload: e.payload, // ✅ already slim
     }));
 
     res.json(formatted);
   } catch (err: any) {
     console.error("❌ Fetch events error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch events" });
+    res.status(500).json({ error: err.message || "Failed to fetch events" });
   }
 });
 

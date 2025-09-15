@@ -18,6 +18,19 @@ async function resolveTenant(req: any) {
 }
 
 /**
+ * Helper: Slim payload for events
+ */
+function slimPayload(payload: any) {
+  return {
+    id: payload?.id,
+    title: payload?.title || payload?.name,
+    email: payload?.email || payload?.contact_email,
+    total: payload?.total_price || payload?.total,
+    status: payload?.status || payload?.financial_status,
+  };
+}
+
+/**
  * ---------------- Orders ----------------
  */
 router.post("/orders/create", async (req, res) => {
@@ -64,7 +77,7 @@ router.post("/orders/create", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "order_created",
-        payload: order,
+        payload: slimPayload(order), // ✅ slimmed payload
         customerId,
       },
     });
@@ -105,7 +118,7 @@ router.post("/customers/create", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "customer_created",
-        payload: customer,
+        payload: slimPayload(customer),
         customerId: dbCustomer.id,
       },
     });
@@ -143,7 +156,7 @@ router.post("/customers/update", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "customer_updated",
-        payload: customer,
+        payload: slimPayload(customer),
         customerId: dbCustomer.id,
       },
     });
@@ -182,7 +195,7 @@ router.post("/products/create", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "product_created",
-        payload: product,
+        payload: slimPayload(product),
       },
     });
 
@@ -217,7 +230,7 @@ router.post("/products/update", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "product_updated",
-        payload: product,
+        payload: slimPayload(product),
       },
     });
 
@@ -242,7 +255,7 @@ router.post("/products/delete", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "product_deleted",
-        payload: product,
+        payload: slimPayload(product),
       },
     });
 
@@ -285,7 +298,7 @@ router.post("/checkouts/update", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: checkout.abandoned_checkout_url ? "cart_abandoned" : "checkout_started",
-        payload: checkout,
+        payload: slimPayload(checkout),
         customerId,
       },
     });
