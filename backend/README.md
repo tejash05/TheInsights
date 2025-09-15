@@ -54,28 +54,9 @@ JWT_SECRET=your_jwt_secret
 SHOPIFY_API_KEY=your_shopify_api_key
 SHOPIFY_API_SECRET=your_shopify_api_secret
 ```
-🏗️ Backend Architecture
+## 🏗️ Project-Level Architecture
 
-flowchart TD
-    subgraph Shopify["Shopify Platform"]
-        API[Shopify REST API]
-        Webhooks[Shopify Webhooks]
-    end
-
-    subgraph Backend["TheInsights Backend - Node.js + Express"]
-        Routes[API Routes - Auth, Insights, Shopify]
-        Prisma[Prisma ORM]
-        DB[(PostgreSQL Database)]
-        Scheduler[Scheduler - Cron Jobs]
-    end
-
-    API --> Routes
-    Webhooks --> Routes
-    Scheduler --> Routes
-    Routes --> Prisma --> DB
-
-🏗️ Project-Level Architecture
-
+```mermaid
 flowchart TD
     subgraph Shopify["Shopify Platform"]
         API[Shopify REST API]
@@ -101,6 +82,7 @@ flowchart TD
     API --> Routes
     Webhooks --> Routes
     Scheduler --> Routes
+```
 
 🔑 Key Features
 
