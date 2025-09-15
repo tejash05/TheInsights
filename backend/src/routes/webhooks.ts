@@ -23,7 +23,7 @@ async function resolveTenant(req: any) {
 function formatOrder(order: any) {
   return {
     id: String(order.id),
-    title: order.name || order.order_number,
+    title: order.name || `#${order.order_number}`,
     email: order.email,
     total: parseFloat(order.total_price || "0"),
     status: order.financial_status,
@@ -34,7 +34,9 @@ function formatCustomer(customer: any) {
   return {
     id: String(customer.id),
     email: customer.email,
-    name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+    name:
+      `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+      "Anonymous",
   };
 }
 
@@ -49,9 +51,10 @@ function formatProduct(product: any) {
 function formatCheckout(checkout: any) {
   return {
     id: String(checkout.id),
-    title: checkout.name,
+    title: checkout.name || `#${checkout.id}`,
     email: checkout.email,
     total: parseFloat(checkout.total_price || "0"),
+    status: checkout.abandoned_checkout_url ? "abandoned" : "started",
   };
 }
 
@@ -69,12 +72,18 @@ router.post("/orders/create", async (req, res) => {
       const dbCustomer = await prisma.customer.upsert({
         where: { shopifyId: String(order.customer.id) },
         update: {
-          name: `${order.customer.first_name || ""} ${order.customer.last_name || ""}`.trim() || "Anonymous",
+          name:
+            `${order.customer.first_name || ""} ${
+              order.customer.last_name || ""
+            }`.trim() || "Anonymous",
           email: order.customer.email,
         },
         create: {
           shopifyId: String(order.customer.id),
-          name: `${order.customer.first_name || ""} ${order.customer.last_name || ""}`.trim() || "Anonymous",
+          name:
+            `${order.customer.first_name || ""} ${
+              order.customer.last_name || ""
+            }`.trim() || "Anonymous",
           email: order.customer.email,
           tenantId: tenant.id,
           totalSpent: 0,
@@ -107,6 +116,7 @@ router.post("/orders/create", async (req, res) => {
       },
     });
 
+    console.log(`✅ Webhook: Order created for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook order error:", err.message);
@@ -125,13 +135,17 @@ router.post("/customers/create", async (req, res) => {
     const dbCustomer = await prisma.customer.upsert({
       where: { shopifyId: String(customer.id) },
       update: {
-        name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+        name:
+          `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+          "Anonymous",
         email: customer.email,
         totalSpent: parseFloat(customer.total_spent || "0"),
       },
       create: {
         shopifyId: String(customer.id),
-        name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+        name:
+          `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+          "Anonymous",
         email: customer.email,
         tenantId: tenant.id,
         totalSpent: parseFloat(customer.total_spent || "0"),
@@ -162,13 +176,17 @@ router.post("/customers/update", async (req, res) => {
     const dbCustomer = await prisma.customer.upsert({
       where: { shopifyId: String(customer.id) },
       update: {
-        name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+        name:
+          `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+          "Anonymous",
         email: customer.email,
         totalSpent: parseFloat(customer.total_spent || "0"),
       },
       create: {
         shopifyId: String(customer.id),
-        name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+        name:
+          `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+          "Anonymous",
         email: customer.email,
         tenantId: tenant.id,
         totalSpent: parseFloat(customer.total_spent || "0"),
@@ -201,7 +219,10 @@ router.post("/products/create", async (req, res) => {
 
     await prisma.product.upsert({
       where: { shopifyId: String(product.id) },
-      update: { title: product.title, price: parseFloat(product.variants?.[0]?.price || "0") },
+      update: {
+        title: product.title,
+        price: parseFloat(product.variants?.[0]?.price || "0"),
+      },
       create: {
         shopifyId: String(product.id),
         title: product.title,
@@ -232,7 +253,10 @@ router.post("/products/update", async (req, res) => {
 
     await prisma.product.upsert({
       where: { shopifyId: String(product.id) },
-      update: { title: product.title, price: parseFloat(product.variants?.[0]?.price || "0") },
+      update: {
+        title: product.title,
+        price: parseFloat(product.variants?.[0]?.price || "0"),
+      },
       create: {
         shopifyId: String(product.id),
         title: product.title,
@@ -269,12 +293,18 @@ router.post("/checkouts/update", async (req, res) => {
       const dbCustomer = await prisma.customer.upsert({
         where: { shopifyId: String(checkout.customer.id) },
         update: {
-          name: `${checkout.customer.first_name || ""} ${checkout.customer.last_name || ""}`.trim() || "Anonymous",
+          name:
+            `${checkout.customer.first_name || ""} ${
+              checkout.customer.last_name || ""
+            }`.trim() || "Anonymous",
           email: checkout.customer.email,
         },
         create: {
           shopifyId: String(checkout.customer.id),
-          name: `${checkout.customer.first_name || ""} ${checkout.customer.last_name || ""}`.trim() || "Anonymous",
+          name:
+            `${checkout.customer.first_name || ""} ${
+              checkout.customer.last_name || ""
+            }`.trim() || "Anonymous",
           email: checkout.customer.email,
           tenantId: tenant.id,
           totalSpent: 0,
@@ -286,7 +316,9 @@ router.post("/checkouts/update", async (req, res) => {
     await prisma.event.create({
       data: {
         tenantId: tenant.id,
-        type: checkout.abandoned_checkout_url ? "cart_abandoned" : "checkout_started",
+        type: checkout.abandoned_checkout_url
+          ? "cart_abandoned"
+          : "checkout_started",
         payload: formatCheckout(checkout),
         customerId,
       },
@@ -295,7 +327,9 @@ router.post("/checkouts/update", async (req, res) => {
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook checkout error:", err.message);
-    res.status(500).json({ error: err.message || "Failed to handle checkout event" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to handle checkout event" });
   }
 });
 

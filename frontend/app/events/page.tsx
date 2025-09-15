@@ -44,26 +44,31 @@ export default function EventsPage() {
   return (
     <div className="flex">
       <Sidebar />
-      <main className="flex-1 bg-gray-50 min-h-screen">
+      <main className="flex-1 bg-gray-50 min-h-screen flex flex-col">
         <Header title="Events" />
 
-        <div className="p-6">
+        <div className="p-6 flex-1 flex flex-col">
           {loading ? (
             <p className="text-gray-400">Loading...</p>
           ) : events.length === 0 ? (
             <p className="text-gray-400">No events yet</p>
           ) : (
-            <Table
-              columns={[
-                { header: "Type", accessor: "type" },
-                { header: "Created At", accessor: "createdAt" },
-                { header: "Customer", accessor: "customer" },
-                { header: "Draft ID", accessor: "draftId" },
-                { header: "Total", accessor: "total" },
-                { header: "Status", accessor: "status" },
-              ]}
-              data={events}
-            />
+            <div className="bg-white shadow-md rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+              {/* Scrollable Table */}
+              <div className="overflow-y-auto max-h-[70vh]">
+                <Table
+                  columns={[
+                    { header: "Type", accessor: "type" },
+                    { header: "Created At", accessor: "createdAt" },
+                    { header: "Customer", accessor: "customer" },
+                    { header: "Draft ID", accessor: "draftId" },
+                    { header: "Total", accessor: "total" },
+                    { header: "Status", accessor: "status" },
+                  ]}
+                  data={events}
+                />
+              </div>
+            </div>
           )}
         </div>
       </main>
