@@ -18,15 +18,40 @@ async function resolveTenant(req: any) {
 }
 
 /**
- * Helper: Slim payload for events
+ * Formatters for clean event payload
  */
-function slimPayload(payload: any) {
+function formatOrder(order: any) {
   return {
-    id: payload?.id,
-    title: payload?.title || payload?.name,
-    email: payload?.email || payload?.contact_email,
-    total: payload?.total_price || payload?.total,
-    status: payload?.status || payload?.financial_status,
+    id: String(order.id),
+    title: order.name || order.order_number,
+    email: order.email,
+    total: parseFloat(order.total_price || "0"),
+    status: order.financial_status,
+  };
+}
+
+function formatCustomer(customer: any) {
+  return {
+    id: String(customer.id),
+    email: customer.email,
+    name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Anonymous",
+  };
+}
+
+function formatProduct(product: any) {
+  return {
+    id: String(product.id),
+    title: product.title,
+    status: product.status,
+  };
+}
+
+function formatCheckout(checkout: any) {
+  return {
+    id: String(checkout.id),
+    title: checkout.name,
+    email: checkout.email,
+    total: parseFloat(checkout.total_price || "0"),
   };
 }
 
@@ -38,7 +63,7 @@ router.post("/orders/create", async (req, res) => {
     const tenant = await resolveTenant(req);
     const order = req.body;
 
-    // 🔑 Ensure customer exists first
+    // ensure customer exists
     let customerId: string | null = null;
     if (order.customer?.id) {
       const dbCustomer = await prisma.customer.upsert({
@@ -77,12 +102,11 @@ router.post("/orders/create", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "order_created",
-        payload: slimPayload(order), // ✅ slimmed payload
+        payload: formatOrder(order),
         customerId,
       },
     });
 
-    console.log(`✅ Webhook: Order created for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook order error:", err.message);
@@ -118,12 +142,11 @@ router.post("/customers/create", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "customer_created",
-        payload: slimPayload(customer),
+        payload: formatCustomer(customer),
         customerId: dbCustomer.id,
       },
     });
 
-    console.log(`✅ Webhook: Customer created for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook customer error:", err.message);
@@ -156,12 +179,11 @@ router.post("/customers/update", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "customer_updated",
-        payload: slimPayload(customer),
+        payload: formatCustomer(customer),
         customerId: dbCustomer.id,
       },
     });
 
-    console.log(`✅ Webhook: Customer updated for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook customer update error:", err.message);
@@ -179,10 +201,7 @@ router.post("/products/create", async (req, res) => {
 
     await prisma.product.upsert({
       where: { shopifyId: String(product.id) },
-      update: {
-        title: product.title,
-        price: parseFloat(product.variants?.[0]?.price || "0"),
-      },
+      update: { title: product.title, price: parseFloat(product.variants?.[0]?.price || "0") },
       create: {
         shopifyId: String(product.id),
         title: product.title,
@@ -195,11 +214,10 @@ router.post("/products/create", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "product_created",
-        payload: slimPayload(product),
+        payload: formatProduct(product),
       },
     });
 
-    console.log(`✅ Webhook: Product created for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook product create error:", err.message);
@@ -214,10 +232,7 @@ router.post("/products/update", async (req, res) => {
 
     await prisma.product.upsert({
       where: { shopifyId: String(product.id) },
-      update: {
-        title: product.title,
-        price: parseFloat(product.variants?.[0]?.price || "0"),
-      },
+      update: { title: product.title, price: parseFloat(product.variants?.[0]?.price || "0") },
       create: {
         shopifyId: String(product.id),
         title: product.title,
@@ -230,40 +245,14 @@ router.post("/products/update", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: "product_updated",
-        payload: slimPayload(product),
+        payload: formatProduct(product),
       },
     });
 
-    console.log(`✅ Webhook: Product updated for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook product update error:", err.message);
     res.status(500).json({ error: err.message || "Failed to update product" });
-  }
-});
-
-router.post("/products/delete", async (req, res) => {
-  try {
-    const tenant = await resolveTenant(req);
-    const product = req.body;
-
-    await prisma.product.delete({
-      where: { shopifyId: String(product.id) },
-    });
-
-    await prisma.event.create({
-      data: {
-        tenantId: tenant.id,
-        type: "product_deleted",
-        payload: slimPayload(product),
-      },
-    });
-
-    console.log(`✅ Webhook: Product deleted for tenant ${tenant.id}`);
-    res.status(200).send("OK");
-  } catch (err: any) {
-    console.error("❌ Webhook product delete error:", err.message);
-    res.status(500).json({ error: err.message || "Failed to delete product" });
   }
 });
 
@@ -298,12 +287,11 @@ router.post("/checkouts/update", async (req, res) => {
       data: {
         tenantId: tenant.id,
         type: checkout.abandoned_checkout_url ? "cart_abandoned" : "checkout_started",
-        payload: slimPayload(checkout),
+        payload: formatCheckout(checkout),
         customerId,
       },
     });
 
-    console.log(`✅ Webhook: Checkout event for tenant ${tenant.id}`);
     res.status(200).send("OK");
   } catch (err: any) {
     console.error("❌ Webhook checkout error:", err.message);
