@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id          String     @id @default(cuid())
+  name        String
+  shopifyShop String
+  accessToken String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  domain      String?
+
+  // Relations
+  customers Customer[]
+  events    Event[]
+  orders    Order[]
+  products  Product[]
+  users     User[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // hashed password
+  tenantId  String
+  createdAt DateTime @default(now())
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  tenantId   String
+  shopifyId  String   @unique
+  name       String
+  email      String?
+  totalSpent Float    @default(0)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  orders   Order[]
+  events   Event[]  // 👈 back-reference from Event
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  tenantId   String
+  total      Float
+  createdAt  DateTime @default(now())
+  shopifyId  String   @unique
+  customerId String?
+
+  // Relations
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  tenant   Tenant      @relation(fields: [tenantId], references: [id])
+  items    OrderItem[] // 👈 new relation to order line items
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  tenantId  String
+  price     Float
+  createdAt DateTime @default(now())
+  shopifyId String   @unique
+  title     String
+
+  // Relations
+  tenant Tenant      @relation(fields: [tenantId], references: [id])
+  items  OrderItem[] // 👈 new relation from order items
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  shopifyLineId String   @unique        // ✅ add this
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+
+model Event {
+  id         String   @id @default(cuid())
+  tenantId   String
+  type       String
+  payload    Json?
+  createdAt  DateTime @default(now())
+  customerId String?
+
+  // Relations
+  customer Customer? @relation(fields: [customerId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+}
