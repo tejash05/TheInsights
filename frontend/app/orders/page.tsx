@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import { Table } from "@/components/ui/Table";
-import { apiFetch } from "@/lib/apiClient"; // 👈 backend fetch wrapper
+import { apiFetch } from "@/lib/apiClient";
 
 export default function OrdersPage() {
   const { data: session } = useSession();
@@ -17,12 +17,12 @@ export default function OrdersPage() {
       if (!session?.user?.tenantId) return;
       try {
         setLoading(true);
-        const data = await apiFetch(`/orders?tenantId=${session.user.tenantId}`); // ✅ pass tenantId
+        const data = await apiFetch(`/orders?tenantId=${session.user.tenantId}`);
 
-        // Normalize for table
+        // ✅ Use customerId directly from backend response
         const formatted = data.map((o: any) => ({
-          id: o.shopifyId || o.id,
-          customer: o.customer?.shopifyId || "Unknown", // ✅ show full Customer ID
+          id: o.id || o.shopifyId,
+          customerId: o.customerId || "Unknown",
           amount: o.total || 0,
           date: new Date(o.createdAt).toLocaleDateString(),
         }));
@@ -40,12 +40,9 @@ export default function OrdersPage() {
   return (
     <div className="flex">
       <Sidebar />
-
       <main className="flex-1 flex flex-col bg-gray-50 min-h-screen">
         <Header title="Orders" />
-
         <div className="p-6 space-y-6">
-          {/* Page heading */}
           <div>
             <h2 className="text-lg font-semibold text-gray-800">
               Recent Orders
@@ -55,7 +52,6 @@ export default function OrdersPage() {
             </p>
           </div>
 
-          {/* Orders table card */}
           <div className="bg-white shadow rounded-lg p-4">
             {loading ? (
               <p className="text-gray-400">Loading...</p>
@@ -63,7 +59,7 @@ export default function OrdersPage() {
               <Table
                 columns={[
                   { header: "Order ID", accessor: "id" },
-                  { header: "Customer ID", accessor: "customer" }, // ✅ full ID
+                  { header: "Customer ID", accessor: "customerId" }, // ✅ fixed
                   { header: "Amount", accessor: "amount" },
                   { header: "Date", accessor: "date" },
                 ]}
