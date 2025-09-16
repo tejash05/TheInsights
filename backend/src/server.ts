@@ -7,7 +7,8 @@ import webhookRoutes from "./routes/webhooks";
 import eventRoutes from "./routes/events";
 import { registerWebhooks } from "./services/registerWebhooks";
 import resyncRoutes from "./routes/resync";
-import "./scheduler"; 
+import "./scheduler";
+import orderRoutes from "./routes/orders"; // ✅ dedicated file for orders
 
 const prisma = new PrismaClient();
 const app = express();
@@ -27,6 +28,8 @@ app.use(express.json());
 app.use("/webhooks", webhookRoutes);
 app.use("/events", eventRoutes);
 app.use("/resync", resyncRoutes);
+app.use("/orders", orderRoutes); // ✅ use cleaned orders routes
+
 // ---------------- Debug ----------------
 app.get("/ping", (_req: Request, res: Response) => {
   res.send("✅ Express + Prisma is working");
@@ -180,51 +183,6 @@ app.get("/customers/stats", async (req: Request, res: Response) => {
     res.json(sorted);
   } catch (err: any) {
     console.error("❌ Customer stats error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch stats" });
-  }
-});
-
-// ---------------- Orders ----------------
-app.get("/orders", async (req: Request, res: Response) => {
-  const { tenantId } = req.query;
-  if (!tenantId) return res.status(400).json({ error: "Missing tenantId" });
-
-  try {
-    const orders = await prisma.order.findMany({
-      where: { tenantId: String(tenantId) },
-      include: { customer: true },
-      orderBy: { createdAt: "desc" },
-    });
-    res.json(orders);
-  } catch (err: any) {
-    console.error("❌ Fetch orders error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch orders" });
-  }
-});
-
-app.get("/orders/stats", async (req: Request, res: Response) => {
-  const { tenantId } = req.query;
-  if (!tenantId) return res.status(400).json({ error: "Missing tenantId" });
-
-  try {
-    const orders = await prisma.order.findMany({
-      where: { tenantId: String(tenantId) },
-      orderBy: { createdAt: "asc" },
-    });
-
-    const grouped = orders.reduce((acc: Record<string, number>, o) => {
-      const date = o.createdAt.toISOString().split("T")[0];
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {});
-
-    const stats = Object.entries(grouped).map(([date, orders]) => ({
-      date,
-      orders,
-    }));
-    res.json(stats);
-  } catch (err: any) {
-    console.error("❌ Orders stats error:", err);
     res.status(500).json({ error: err.message || "Failed to fetch stats" });
   }
 });
