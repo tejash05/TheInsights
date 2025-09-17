@@ -22,7 +22,7 @@ router.post("/:tenantId", async (req, res) => {
     // ✅ Return counts so frontend can show "x customers, y products, z orders"
     res.json({ success: true, counts });
   } catch (err) {
-    console.error("❌ Sync error:", err);
+    console.error("Sync error:", err);
     res.status(500).json({ success: false, error: "Failed to sync Shopify data" });
   }
 });

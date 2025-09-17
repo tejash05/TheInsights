@@ -20,10 +20,10 @@ export default function CustomersPage() {
         setLoading(true);
         const data = await apiFetch(`/customers/stats?tenantId=${session.user.tenantId}`);
 
-        // ✅ Use backend-provided IDs directly
+        // Use backend-provided IDs directly
         const formatted = data.map((c: any) => ({
           id: c.last4Id, // short safe display ID
-          fullId: c.customerId, // full Shopify ID (hidden, if needed)
+          fullId: c.customerId, // full Shopify ID (hidden)
           orders: c.ordersCount || 0,
           value: c.totalSpent || 0,
         }));
@@ -60,7 +60,7 @@ export default function CustomersPage() {
               ) : customers.length > 0 ? (
                 <PieChartComponent
                   data={customers.map((c) => ({
-                    name: c.id, // ✅ shows last4Id (…1234)
+                    name: c.id, //  shows last4Id (…1234)
                     value: c.value,
                   }))}
                 />

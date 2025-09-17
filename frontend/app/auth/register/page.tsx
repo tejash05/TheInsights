@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Store, KeyRound } from "lucide-react";
@@ -21,15 +20,17 @@ export default function RegisterPage() {
     const accessToken = (form.elements.namedItem("accessToken") as HTMLInputElement).value;
 
     try {
-      const res = await fetch("http://localhost:4000/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, shopifyShop, accessToken }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, shopifyShop, accessToken }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to register");
-
       setTenantId(data.tenantId);
     } catch (err: any) {
       console.error("Registration failed:", err);
@@ -53,7 +54,8 @@ export default function RegisterPage() {
             Shopify Insights
           </h1>
           <p className="mt-4 text-xl text-white/80 max-w-md mx-auto">
-            Get started by creating your account and connecting your Shopify store.
+            Get started by creating your account and connecting your Shopify
+            store.
           </p>
         </motion.div>
       </div>

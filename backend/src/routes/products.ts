@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
 
     res.json(products);
   } catch (err: any) {
-    console.error("❌ Fetch products error:", err);
+    console.error(" Fetch products error:", err);
     res.status(500).json({ error: "Failed to fetch products" });
   }
 });
@@ -62,7 +62,7 @@ router.get("/stats", async (req, res) => {
         price: true, // already stores line total in ingestion
       },
       where: {
-        orderId: { in: orderIds }, // ✅ only tenant's orders
+        orderId: { in: orderIds }, //  only tenant's orders
       },
     });
 
@@ -87,7 +87,7 @@ router.get("/stats", async (req, res) => {
 
     res.json(topProducts);
   } catch (err: any) {
-    console.error("❌ Product stats error:", err);
+    console.error("Product stats error:", err);
     res.status(500).json({ error: "Failed to fetch product stats" });
   }
 });

@@ -19,7 +19,7 @@ export default function OrdersPage() {
         setLoading(true);
         const data = await apiFetch(`/orders?tenantId=${session.user.tenantId}`);
 
-        // ✅ Use customerId directly from backend response
+        // Use customerId directly from backend response
         const formatted = data.map((o: any) => ({
           id: o.id || o.shopifyId,
           customerId: o.customerId || "Unknown",
@@ -59,7 +59,7 @@ export default function OrdersPage() {
               <Table
                 columns={[
                   { header: "Order ID", accessor: "id" },
-                  { header: "Customer ID", accessor: "customerId" }, // ✅ fixed
+                  { header: "Customer ID", accessor: "customerId" }, //  fixed
                   { header: "Amount", accessor: "amount" },
                   { header: "Date", accessor: "date" },
                 ]}

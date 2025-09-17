@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
     });
     res.json(tenant);
   } catch (err: any) {
-    console.error("❌ Tenant creation error:", err); // will show in terminal
+    console.error("Tenant creation error:", err); // will show in terminal
 
     res.status(500).json({
       error: "Failed to create tenant",

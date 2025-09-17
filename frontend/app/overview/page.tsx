@@ -20,7 +20,7 @@ export default function OverviewPage() {
       try {
         setLoading(true);
 
-        // ✅ TenantId auto-injected via apiFetch
+        // TenantId auto-injected via apiFetch
         const overviewData = await apiFetch("/overview", {}, session.user.tenantId);
         setOverview(overviewData);
 
@@ -31,7 +31,7 @@ export default function OverviewPage() {
         }));
         setOrders(formatted);
       } catch (err) {
-        console.error("❌ Failed to fetch overview:", err);
+        console.error(" Failed to fetch overview:", err);
       } finally {
         setLoading(false);
       }

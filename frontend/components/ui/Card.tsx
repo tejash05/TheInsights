@@ -2,7 +2,7 @@ import React from "react";
 
 interface CardProps {
   title: string;
-  value: React.ReactNode; // ✅ allows string, number, JSX, components
+  value: React.ReactNode; // allows string, number, JSX, components
   subtext?: string;
 }
 

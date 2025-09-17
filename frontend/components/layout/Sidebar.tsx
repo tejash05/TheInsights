@@ -10,9 +10,9 @@ import {
   Package,
   Settings,
   LogOut,
-  Activity, // 👈 for Events
+  Activity, // for Events
 } from "lucide-react";
-import { signOut } from "next-auth/react"; // ✅ import signOut
+import { signOut } from "next-auth/react"; //  import signOut
 
 const navItems = [
   { name: "Overview", href: "/overview", icon: LayoutDashboard },
@@ -69,7 +69,7 @@ export default function Sidebar() {
       {/* Logout at bottom */}
       <div className="p-4 border-t border-gray-700">
         <button
-          onClick={() => signOut({ callbackUrl: "/auth/login" })} // ✅ log out properly
+          onClick={() => signOut({ callbackUrl: "/auth/login" })} // log out properly
           className="flex items-center gap-3 text-gray-300 hover:text-white w-full"
         >
           <LogOut size={20} />

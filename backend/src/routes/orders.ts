@@ -61,7 +61,7 @@ router.get("/stats", async (req, res) => {
 
     res.json(stats);
   } catch (err: any) {
-    console.error("❌ Orders stats error:", err);
+    console.error("Orders stats error:", err);
     res.status(500).json({ error: "Failed to fetch stats" });
   }
 });

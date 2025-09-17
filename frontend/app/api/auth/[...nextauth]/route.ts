@@ -13,7 +13,7 @@ const handler = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          // 👇 FIX: backend route is `/login`, not `/api/login`
+          
           const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -26,7 +26,7 @@ const handler = NextAuth({
           if (!res.ok) return null;
           const user = await res.json();
 
-          // ✅ Must return a user object with at least `id`
+          
           return {
             id: user.id,
             email: user.email,

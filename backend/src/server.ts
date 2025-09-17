@@ -3,36 +3,53 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
+
 import webhookRoutes from "./routes/webhooks";
 import eventRoutes from "./routes/events";
 import { registerWebhooks } from "./services/registerWebhooks";
 import resyncRoutes from "./routes/resync";
 import "./scheduler";
-import orderRoutes from "./routes/orders"; // ✅ dedicated file for orders
+import orderRoutes from "./routes/orders"; // dedicated file for orders
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ Allow frontend requests (from .env FRONTEND_URL)
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://theinsights.onrender.com",
+];
+
+// CORS setup
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
     credentials: true,
   })
 );
 
+//  Fix crash: Express 5+ needs (.*) instead of "*"
+app.options("*", cors());
+
 app.use(express.json());
+
+// ---------------- Routes ----------------
 app.use("/webhooks", webhookRoutes);
 app.use("/events", eventRoutes);
 app.use("/resync", resyncRoutes);
-app.use("/orders", orderRoutes); // ✅ use cleaned orders routes
+app.use("/orders", orderRoutes);
 
 // ---------------- Debug ----------------
 app.get("/ping", (_req: Request, res: Response) => {
-  res.send("✅ Express + Prisma is working");
+  res.send(" Express + Prisma is working");
 });
 
 // ---------------- Login ----------------
@@ -87,7 +104,7 @@ app.post("/register", async (req: Request, res: Response) => {
       email: user.email,
     });
   } catch (err: any) {
-    console.error("❌ Registration error:", err);
+    console.error(" Registration error:", err);
     res.status(500).json({ error: err.message || "Failed to register tenant" });
   }
 });
@@ -109,10 +126,8 @@ app.post("/tenants", async (req: Request, res: Response) => {
 
     res.json(tenant);
   } catch (err: any) {
-    console.error("❌ Tenant creation error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to create tenant" });
+    console.error(" Tenant creation error:", err);
+    res.status(500).json({ error: err.message || "Failed to create tenant" });
   }
 });
 
@@ -121,7 +136,7 @@ app.get("/tenants", async (_req: Request, res: Response) => {
     const tenants = await prisma.tenant.findMany();
     res.json(tenants);
   } catch (err: any) {
-    console.error("❌ Fetch tenants error:", err);
+    console.error("Fetch tenants error:", err);
     res.status(500).json({ error: err.message || "Failed to fetch tenants" });
   }
 });
@@ -149,7 +164,7 @@ app.get("/customers", async (req: Request, res: Response) => {
 
     res.json(formatted);
   } catch (err: any) {
-    console.error("❌ Fetch customers error:", err);
+    console.error(" Fetch customers error:", err);
     res.status(500).json({ error: err.message || "Failed to fetch customers" });
   }
 });
@@ -182,7 +197,7 @@ app.get("/customers/stats", async (req: Request, res: Response) => {
       .slice(0, 5);
     res.json(sorted);
   } catch (err: any) {
-    console.error("❌ Customer stats error:", err);
+    console.error("Customer stats error:", err);
     res.status(500).json({ error: err.message || "Failed to fetch stats" });
   }
 });
@@ -199,7 +214,7 @@ app.get("/products", async (req: Request, res: Response) => {
     });
     res.json(products);
   } catch (err: any) {
-    console.error("❌ Fetch products error:", err);
+    console.error("Fetch products error:", err);
     res.status(500).json({ error: err.message || "Failed to fetch products" });
   }
 });
@@ -260,7 +275,7 @@ app.get("/products/stats", async (req: Request, res: Response) => {
       .slice(0, 5);
     res.json(topProducts);
   } catch (err: any) {
-    console.error("❌ Products stats error:", err);
+    console.error(" Products stats error:", err);
     res
       .status(500)
       .json({ error: err.message || "Failed to fetch product stats" });
@@ -292,7 +307,7 @@ app.get("/overview", async (req: Request, res: Response) => {
       totalRevenue: totalRevenueAgg._sum.total || 0,
     });
   } catch (err: any) {
-    console.error("❌ Overview fetch error:", err);
+    console.error(" Overview fetch error:", err);
     res
       .status(500)
       .json({ error: err.message || "Failed to fetch overview" });
@@ -300,5 +315,5 @@ app.get("/overview", async (req: Request, res: Response) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(` Server running at http://localhost:${PORT}`);
 });

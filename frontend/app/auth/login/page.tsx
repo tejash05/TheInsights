@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔹 Redirect if already logged in
+  //  Redirect if already logged in
   useEffect(() => {
     if (status === "authenticated") {
       router.push("/overview");

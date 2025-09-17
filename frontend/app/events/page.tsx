@@ -19,7 +19,7 @@ export default function EventsPage() {
         setLoading(true);
         const data = await apiFetch(`/events?tenantId=${session.user.tenantId}`);
 
-        // ✅ Cleanly format for the table
+        // Cleanly format for the table
         const formatted = data.map((e: any) => {
           return {
             type: e.type.replace(/_/g, " "), // prettier labels

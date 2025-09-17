@@ -69,7 +69,7 @@ router.get("/", async (req, res) => {
 
     res.json(formatted);
   } catch (err: any) {
-    console.error("❌ Fetch events error:", err);
+    console.error(" Fetch events error:", err);
     res.status(500).json({ error: err.message || "Failed to fetch events" });
   }
 });

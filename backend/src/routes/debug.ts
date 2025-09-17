@@ -8,7 +8,7 @@ router.get("/ping", async (req, res) => {
     const tenants = await prisma.tenant.findMany();
     res.json({ ok: true, tenants });
   } catch (err: any) {
-    console.error("❌ DB Test error:", err);
+    console.error(" DB Test error:", err);
     res.status(500).json({ ok: false, error: err.message || String(err) });
   }
 });

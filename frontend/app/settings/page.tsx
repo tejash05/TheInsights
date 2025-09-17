@@ -26,7 +26,7 @@ export default function SettingsPage() {
 
       setResult(data.counts); // backend returns counts {customers, products, orders}
     } catch (err) {
-      console.error("❌ Resync failed:", err);
+      console.error(" Resync failed:", err);
       alert("Re-sync failed. Check console for details.");
     } finally {
       setLoading(false);
@@ -86,7 +86,7 @@ export default function SettingsPage() {
             {result && (
               <div className="mt-4 text-sm text-gray-700">
                 <p>
-                  ✅ Re-sync complete: {result.customers} customers,{" "}
+                   Re-sync complete: {result.customers} customers,{" "}
                   {result.products} products, {result.orders} orders synced.
                 </p>
               </div>

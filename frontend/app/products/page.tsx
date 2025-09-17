@@ -58,7 +58,7 @@ export default function ProductsPage() {
 
         setProducts(formatted);
       } catch (err) {
-        console.error("❌ Failed to fetch products:", err);
+        console.error(" Failed to fetch products:", err);
       } finally {
         setLoading(false);
       }

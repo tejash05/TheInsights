@@ -16,12 +16,12 @@ cron.schedule("0 */6 * * *", async () => {
           tenant.shopifyShop,
           tenant.accessToken
         );
-        console.log(`✅ Resynced tenant: ${tenant.name}`);
+        console.log(`Resynced tenant: ${tenant.name}`);
       } catch (err: any) {
-        console.error(`❌ Failed resync for tenant ${tenant.name}:`, err.message);
+        console.error(`Failed resync for tenant ${tenant.name}:`, err.message);
       }
     }
   } catch (err: any) {
-    console.error("❌ Scheduler failed:", err.message);
+    console.error(" Scheduler failed:", err.message);
   }
 });

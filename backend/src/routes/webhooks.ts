@@ -326,7 +326,7 @@ router.post("/checkouts/update", async (req, res) => {
 
     res.status(200).send("OK");
   } catch (err: any) {
-    console.error("❌ Webhook checkout error:", err.message);
+    console.error(" Webhook checkout error:", err.message);
     res
       .status(500)
       .json({ error: err.message || "Failed to handle checkout event" });

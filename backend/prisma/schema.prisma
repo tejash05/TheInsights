@@ -47,7 +47,7 @@ model Customer {
   // Relations
   tenant   Tenant   @relation(fields: [tenantId], references: [id])
   orders   Order[]
-  events   Event[]  // 👈 back-reference from Event
+  events   Event[]  // back-reference from Event
 }
 
 model Order {
@@ -61,7 +61,7 @@ model Order {
   // Relations
   customer Customer?   @relation(fields: [customerId], references: [id])
   tenant   Tenant      @relation(fields: [tenantId], references: [id])
-  items    OrderItem[] // 👈 new relation to order line items
+  items    OrderItem[] // new relation to order line items
 }
 
 model Product {
@@ -74,12 +74,12 @@ model Product {
 
   // Relations
   tenant Tenant      @relation(fields: [tenantId], references: [id])
-  items  OrderItem[] // 👈 new relation from order items
+  items  OrderItem[] //  new relation from order items
 }
 
 model OrderItem {
   id            String   @id @default(cuid())
-  shopifyLineId String   @unique        // ✅ add this
+  shopifyLineId String   @unique        // 
   orderId       String
   productId     String
   quantity      Int
